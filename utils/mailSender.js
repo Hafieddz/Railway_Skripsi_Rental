@@ -32,7 +32,7 @@ const htmlRegister = (otp) => {
                .split("")
                .map(
                  (digit) => `
-                <div style="display: flex; gap: 10px;">
+                <div style=" display: flex; gap: 10px;">
                     <h2>${digit}</h2>
                 </div>
                 `
