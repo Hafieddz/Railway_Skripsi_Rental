@@ -13,6 +13,6 @@ app.use(morgan("dev"));
 app.use(express.json());
 app.use(router);
 
-app.listen(PORT, "0.0.0.0", () => {
+app.listen(PORT, () => {
   console.log(`Server running on PORT : ${PORT}`);
 });
