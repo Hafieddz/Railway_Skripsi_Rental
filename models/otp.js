@@ -27,6 +27,10 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         type: DataTypes.STRING,
       },
+      hashed_password: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
       expires_at: {
         type: DataTypes.DATE,
       },
