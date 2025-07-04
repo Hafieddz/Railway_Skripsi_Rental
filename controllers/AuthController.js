@@ -1,14 +1,31 @@
-const { OTP, User, Customer, Auth, sequelize } = require("../models");
+const {
+  OTP,
+  User,
+  Customer,
+  Admin,
+  Auth,
+  sequelize,
+  Token,
+} = require("../models");
 const bcrypt = require("bcrypt");
 const {
   transporter,
   sender_email,
   htmlRegister,
+  htmlForgotPassword,
+  htmtInvalidEmail,
 } = require("../utils/mailSender");
 const { v4: uuidv4 } = require("uuid");
 const ApiError = require("../lib/ApiError");
+const {
+  generateAdminToken,
+  generateAccessToken,
+  generateRefreshToken,
+  generateAdminRefreshToken,
+  generateForgotPasswordToken,
+} = require("../utils/generateToken");
 const jwt = require("jsonwebtoken");
-const { where } = require("sequelize");
+const { where, Model } = require("sequelize");
 
 const checkEmail = async (req, res, next) => {
   try {
@@ -18,27 +35,30 @@ const checkEmail = async (req, res, next) => {
       where: { email },
     });
 
-    if (checkUser)
-      throw new Error("Email sudah digunakan, silahkan gunakan email lain!");
+    if (checkUser) {
+      throw new ApiError(
+        409,
+        "Email sudah digunakan, silahkan gunakan email lain!"
+      );
+    }
 
-    if (password.length < 8)
-      throw new Error("Password minimal harus 8 karakter!");
+    if (password.length < 8) {
+      throw new ApiError(422, "Password minimal harus 8 karakter!");
+    }
 
-    if (password !== confirm_password) throw new Error("Password tidak sama!");
+    if (password !== confirm_password) {
+      throw new ApiError(422, "Password tidak sama!");
+    }
 
     next();
   } catch (error) {
-    res.status(400).json({
-      is_success: false,
-      message: error.message,
-      status_code: 400,
-    });
+    return next(error);
   }
 };
 
 const sendOtp = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, firstname, lastname, gender } = req.body;
 
     const otp_code = Math.floor(100000 + Math.random() * 900000).toString();
     const expires_at = new Date(Date.now() + 5 * 60 * 1000);
@@ -66,10 +86,15 @@ const sendOtp = async (req, res, next) => {
 
     const createOtp = await OTP.create({
       email,
-      hashed_password: hashPassword,
       otp_code: bcrypt_otp,
       expires_at,
+      hashed_password: hashPassword,
+      firstname,
+      lastname,
+      gender,
     });
+
+    console.log("3333");
 
     res.status(201).json({
       is_success: true,
@@ -87,8 +112,7 @@ const sendOtp = async (req, res, next) => {
 
 const verifyEmail = async (req, res, next) => {
   try {
-    const { otp } = req.body;
-    const { email, firstname, lastname, gender } = req.query;
+    const { otp, email } = req.body;
 
     const checkValidOtp = await OTP.findOne({
       where: {
@@ -98,26 +122,15 @@ const verifyEmail = async (req, res, next) => {
     });
 
     const isValid = await bcrypt.compare(otp, checkValidOtp.otp_code);
-
-    console.log({ email, firstname, lastname, gender });
-
-    if (!isValid)
-      throw new Error("OTP yang anda masukkan salah, silahkan coba lagi!");
-
-    console.log(gender);
-
-    if (!["Male", "Female"].includes(gender)) {
-      throw new Error("Registrasi tidak bisa diproses");
+    if (!isValid) {
+      throw new ApiError(
+        400,
+        "OTP yang anda masukkan salah, silahkan coba lagi!"
+      );
     }
 
     const auth_id = uuidv4();
     const user_id = uuidv4();
-
-    // const createAuth = await Auth.create({
-    //   auth_id,
-    //   email,
-    //   password: checkValidOtp.hashed_password,
-    // });
 
     const createUser = await sequelize.transaction(async (t) => {
       const auth = await Auth.create(
@@ -133,7 +146,7 @@ const verifyEmail = async (req, res, next) => {
         {
           user_id,
           auth_id,
-          gender,
+          gender: checkValidOtp.gender,
           role: "Customer",
         },
         { transaction: t }
@@ -143,8 +156,16 @@ const verifyEmail = async (req, res, next) => {
         {
           customer_id: uuidv4(),
           user_id,
-          firstname,
-          lastname,
+          firstname: checkValidOtp.firstname,
+          lastname: checkValidOtp.lastname,
+        },
+        { transaction: t }
+      );
+      const deleteOtp = await OTP.destroy(
+        {
+          where: {
+            email,
+          },
         },
         { transaction: t }
       );
@@ -152,7 +173,7 @@ const verifyEmail = async (req, res, next) => {
 
     res.status(200).json({
       is_success: true,
-      message: "OTP Route success!",
+      message: "OTP Verified Successfully",
       status_code: 200,
     });
   } catch (error) {
@@ -167,6 +188,7 @@ const verifyEmail = async (req, res, next) => {
 const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
+    let accessToken;
 
     const auth = await Auth.findOne({
       where: {
@@ -177,7 +199,7 @@ const login = async (req, res, next) => {
     if (!auth)
       throw new ApiError(
         401,
-        "User tidak ditemukan, silahkan cek ulang email dan password anda"
+        "Email atau password yang anda masukkan salah, silahkan coba lagi!"
       );
 
     if (auth && bcrypt.compareSync(password, auth.password)) {
@@ -187,59 +209,205 @@ const login = async (req, res, next) => {
         },
       });
 
-      const customer = await Customer.findOne({
-        where: {
-          user_id: user.user_id,
-        },
-      });
+      if (user.role === "Customer") {
+        const customer = await Customer.findOne({
+          where: {
+            user_id: user.user_id,
+          },
+        });
 
-      const accessToken = jwt.sign(
-        {
-          user_id: user.user_id,
-          email: auth.email,
-          fullname: customer.fullname,
-          lastname: customer.lastname,
-          role: user.role,
-          is_verified: user.is_verified,
-          type: "Access",
-        },
-        process.env.JWT_SECRET_KEY,
-        {
-          expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRED,
-        }
-      );
+        console.log(customer.firstname);
 
-      const refreshToken = jwt.sign(
-        {
-          user_id: user.user_id,
-          email: auth.email,
-          fullname: customer.fullname,
-          lastname: customer.lastname,
-          role: user.role,
-          is_verified: user.is_verified,
-          type: "Refresh",
-        },
-        process.env.JWT_SECRET_KEY,
-        {
-          expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRED,
-        }
-      );
-      res.status(200).json({
-        is_success: true,
-        message: {
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        },
-        status_code: 200,
-      });
+        // TODO : GENERATE TOKEN HERE
+        accessToken = await generateAccessToken(
+          user.user_id,
+          email,
+          customer.firstname,
+          customer.lastname,
+          user.role,
+          customer.is_verified
+        );
+      } else {
+        const admin = await Admin.findOne({
+          where: {
+            user_id: user.user_id,
+          },
+        });
+
+        accessToken = await generateAdminToken(
+          user.user_id,
+          email,
+          admin.firstname,
+          admin.lastname,
+          user.role
+        );
+      }
     } else {
       throw new ApiError(
         401,
-        "Password yang anda masukkan salah, silahkcan coba lagi"
+        "Email atau password yang anda masukkan salah, silahkan coba lagi!"
       );
     }
+    res.status(200).json({
+      is_success: true,
+      message: {
+        access_token: accessToken,
+      },
+      status_code: 200,
+    });
   } catch (err) {
     next(err);
+  }
+};
+
+const requestForgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    const isValid = await Auth.findOne({
+      where: {
+        email,
+      },
+    });
+
+    if (isValid) {
+      const token = await generateForgotPasswordToken(email);
+      const expires_at = new Date(Date.now() + 25 * 60 * 1000);
+      const payload = jwt.verify(token, process.env.JWT_SECRET_KEY);
+
+      await Token.create({
+        jti: payload.jti,
+        email,
+        status: "Pending",
+        used_for: "reset-password",
+        expires_at,
+      });
+
+      transporter.sendMail({
+        from: sender_email,
+        to: email,
+        subject: "Link Ganti Password Akun C3 Rental",
+        html: htmlForgotPassword(token),
+      });
+
+      res.status(200).json({
+        is_success: true,
+        message: "Silahkan periksa email anda untuk mengganti password",
+        token,
+        status_code: 200,
+      });
+    } else {
+      transporter.sendMail({
+        from: sender_email,
+        to: email,
+        subject: "Link Ganti Password Akun C3 Rental",
+        html: htmtInvalidEmail,
+      });
+      throw new ApiError(401, "Email anda tidak terdaftar");
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+const checkForgotPasswordToken = async (req, res, next) => {
+  try {
+    // CHECK TOKEN
+    const { token } = req.query;
+
+    const payload = jwt.verify(token, process.env.JWT_SECRET_KEY);
+    const time = new Date().toISOString();
+
+    const request = await Token.findOne({
+      where: {
+        jti: payload.jti,
+      },
+    });
+
+    if (time > request.expires_at) {
+      await Token.update(
+        { status: "Expired" },
+        {
+          where: {
+            status: "Pending",
+            expires_at: {
+              [Op.lt]: time,
+            },
+          },
+        }
+      );
+      throw new ApiError(
+        400,
+        "Link telah kedaluwarsa, silahkan request akses lagi"
+      );
+    }
+
+    res.status(200).json({
+      is_success: true,
+      message: "Token ada",
+      data: {
+        email: request.email,
+        token,
+      },
+      status_code: 200,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const useForgotPasswordToken = async (req, res, next) => {
+  const { password, confirm_password } = req.body;
+
+  console.log(req.body);
+
+  try {
+    res.status(200).json({
+      is_success: true,
+      message: "Passowrd berhasil diganti",
+      status_code: 200,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const checkUser = async (req, res, next) => {
+  const { user_id } = req.user;
+
+  console.log(req.user);
+
+  const user = await User.findByPk(user_id, {
+    include: [
+      {
+        model: Customer,
+        as: "customer",
+      },
+      {
+        model: Auth,
+        as: "auths",
+      },
+      {
+        model: Admin,
+        as: "admin_data",
+      },
+    ],
+  });
+
+  console.log(user);
+
+  if (!user) {
+    throw new ApiError(404, "User tidak ditemukan, Sesi Invalid");
+  }
+  try {
+    res.status(200).json({
+      message: "Sesi Valid!",
+      data: {
+        user,
+      },
+    });
+  } catch (error) {
+    next(error);
   }
 };
 
@@ -248,4 +416,8 @@ module.exports = {
   sendOtp,
   verifyEmail,
   login,
+  requestForgotPassword,
+  checkForgotPasswordToken,
+  useForgotPasswordToken,
+  checkUser,
 };

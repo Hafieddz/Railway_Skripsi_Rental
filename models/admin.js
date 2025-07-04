@@ -1,7 +1,7 @@
 "use strict";
 const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
-  class User extends Model {
+  class Admin extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
@@ -9,67 +9,49 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      User.hasOne(models.Customer, {
-        foreignKey: "user_id",
-        as: "customer",
-      });
-      User.hasOne(models.Admin, {
+      Admin.belongsTo(models.User, {
         foreignKey: "user_id",
         as: "admin_data",
       });
-      User.belongsTo(models.Auth, {
-        foreignKey: "auth_id",
-        as: "auths",
-      });
-      User.hasMany(models.Notification, {
-        foreignKey: "user_id",
-        as: "user_data",
-      });
     }
   }
-  User.init(
+  Admin.init(
     {
-      user_id: {
+      admin_id: {
         type: DataTypes.UUID,
         primaryKey: true,
       },
-      auth_id: {
+      user_id: {
         type: DataTypes.UUID,
-        allowNull: false,
-        references: {
-          key: "auth_id",
-          model: "Auth",
-        },
-        onDelete: "CASCADE",
+        unique: true,
       },
-      image_url: {
+      firstname: {
         type: DataTypes.STRING,
-        defaultValue: "userDefault.jpg",
-      },
-      gender: {
-        type: DataTypes.ENUM,
-        values: ["Male", "Female"],
         allowNull: false,
       },
-      role: {
+      lastname: DataTypes.STRING,
+      status: {
         type: DataTypes.ENUM,
-        values: ["Super Admin", "Admin", "Customer"],
-        defaultValue: "Customer",
+        allowNull: false,
+        defaultValue: ["Active"],
+        values: ["Active", "Non-Active"],
       },
       created_at: {
+        allowNull: false,
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
       },
       updated_at: {
+        allowNull: false,
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
       },
     },
     {
       sequelize,
-      modelName: "User",
+      modelName: "Admin",
       timestamps: false,
     }
   );
-  return User;
+  return Admin;
 };

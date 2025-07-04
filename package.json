@@ -9,15 +9,25 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node app.js",
-    "dev": "nodemon app.js"
+    "dev": "nodemon app.js",
+    "delete-all-data": "npx sequelize-cli db:seed --seed 20250421143516-truncate-all-tables.js",
+    "migrate-undo-all": "npx sequelize-cli db:migrate:undo:all",
+    "migrate-db": "npx sequelize-cli db:migrate",
+    "create-superadmin": "npx sequelize-cli db:seed --seed 20250421143814-create-superadmin.js",
+    "create-vehicles": "npx sequelize-cli db:seed --seed 20250421143814-create-superadmin.js"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
+    "imagekit": "^6.0.0",
+    "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",
+    "midtrans-client": "^1.4.2",
     "morgan": "^1.10.0",
+    "multer": "^2.0.0",
+    "node-cron": "^4.0.7",
     "nodemailer": "^6.10.1",
     "nodemon": "^3.1.9",
     "pg": "^8.14.1",

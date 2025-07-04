@@ -2,48 +2,45 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable("Users", {
-      user_id: {
+    await queryInterface.createTable("Admins", {
+      admin_id: {
         allowNull: false,
         primaryKey: true,
         type: Sequelize.UUID,
       },
-      auth_id: {
+      user_id: {
         allowNull: false,
         type: Sequelize.UUID,
         references: {
-          model: "Auths",
-          key: "auth_id",
+          key: "user_id",
+          model: "Users",
         },
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE",
       },
-      image_url: {
+      firstname: {
         type: Sequelize.STRING,
-        defaultValue: "userDefault.jpg",
-      },
-      gender: {
-        type: Sequelize.ENUM,
-        values: ["Male", "Female"],
         allowNull: false,
       },
-      role: {
+      lastname: {
         type: Sequelize.STRING,
-        values: ["Admin", "Customer"],
-        defaultValue: "Customer",
+      },
+      status: {
+        type: Sequelize.ENUM,
+        defaultValue: "Active",
+        values: ["Active", "Non-Active"],
       },
       created_at: {
+        allowNull: false,
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW,
       },
       updated_at: {
         allowNull: false,
-        defaultValue: Sequelize.NOW,
         type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW,
       },
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable("Users");
+    await queryInterface.dropTable("Admins");
   },
 };
