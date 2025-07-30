@@ -1,66 +1,62 @@
 "use strict";
 const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
-  class Notification extends Model {
+  class Review extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      // define association here
-      Notification.belongsTo(models.User, {
+      Review.belongsTo(models.User, {
         foreignKey: "user_id",
         as: "user_data",
       });
-      Notification.belongsTo(models.Booking, {
+      Review.belongsTo(models.Booking, {
         foreignKey: "booking_id",
-        as: "booking_notification",
-      });
-      Notification.belongsTo(models.Payment, {
-        foreignKey: "payment_id",
-        as: "payment_notification",
+        as: "book_data",
       });
     }
-  } 
-  Notification.init(
+  }
+  Review.init(
     {
-      notification_id: {
+      review_id: {
+        type: DataTypes.UUID,
         allowNull: false,
         primaryKey: true,
-        type: DataTypes.UUID,
-      },
-      booking_id: {
-        type: DataTypes.UUID,
-      },
-      payment_id: {
-        type: DataTypes.UUID,
       },
       user_id: {
         type: DataTypes.UUID,
+        allowNull: false,
       },
-      is_read: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
+      booking_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
       },
-      notification_details: {
+      comment: {
         type: DataTypes.TEXT,
         allowNull: false,
       },
+      rating: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
       created_at: {
+        allowNull: false,
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW(),
       },
       updated_at: {
+        allowNull: false,
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW(),
       },
     },
     {
       sequelize,
-      modelName: "Notification",
+      modelName: "Review",
       timestamps: false,
     }
   );
-  return Notification;
+  return Review;
 };

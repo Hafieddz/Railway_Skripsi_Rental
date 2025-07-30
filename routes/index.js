@@ -9,6 +9,9 @@ const userRouter = require("./user");
 const testingRouter = require("./testing");
 const notificationRouter = require("./notification");
 const paymentRouter = require("./payment");
+const revenueRouter = require("./revenue");
+const reviewRouter = require("./review");
+const informationRouter = require("./information");
 
 router.get("/", index_page);
 router.use("/api/v1/auth", authRouter);
@@ -19,5 +22,8 @@ router.use("/api/v1/user", userRouter);
 router.use("/api/v1/testing", testingRouter);
 router.use("/api/v1/notification", notificationRouter);
 router.use("/api/v1/payment", paymentRouter);
+router.use("/api/v1/revenue", revenueRouter);
+router.use("/api/v1/review", reviewRouter);
+router.use("/api/v1/information", informationRouter);
 
 module.exports = router;

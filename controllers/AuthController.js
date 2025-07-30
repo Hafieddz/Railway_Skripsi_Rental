@@ -25,7 +25,6 @@ const {
   generateForgotPasswordToken,
 } = require("../utils/generateToken");
 const jwt = require("jsonwebtoken");
-const { where, Model } = require("sequelize");
 
 const checkEmail = async (req, res, next) => {
   try {
@@ -65,6 +64,8 @@ const sendOtp = async (req, res, next) => {
     const bcrypt_otp = await bcrypt.hash(otp_code, 10);
 
     const hashPassword = await bcrypt.hash(password, 10);
+
+    console.log(otp_code);
 
     const sendOtpToEmail = transporter.sendMail({
       from: sender_email,
@@ -224,8 +225,7 @@ const login = async (req, res, next) => {
           email,
           customer.firstname,
           customer.lastname,
-          user.role,
-          customer.is_verified
+          user.role
         );
       } else {
         const admin = await Admin.findOne({
@@ -375,8 +375,6 @@ const useForgotPasswordToken = async (req, res, next) => {
 const checkUser = async (req, res, next) => {
   const { user_id } = req.user;
 
-  console.log(req.user);
-
   const user = await User.findByPk(user_id, {
     include: [
       {
@@ -393,8 +391,6 @@ const checkUser = async (req, res, next) => {
       },
     ],
   });
-
-  console.log(user);
 
   if (!user) {
     throw new ApiError(404, "User tidak ditemukan, Sesi Invalid");

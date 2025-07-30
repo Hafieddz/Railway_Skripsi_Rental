@@ -7,11 +7,16 @@ const {
   Booking,
   Notification,
   sequelize,
+  User,
   VehicleAvailability,
   Payment,
+  Customer,
+  Auth,
+  ReturnRecord,
+  Review,
 } = require("../models");
 const ApiError = require("../lib/ApiError");
-const { where, Op } = require("sequelize");
+const { where, Op, Model, literal } = require("sequelize");
 const snap = require("../config/snap");
 
 const getBookById = async (req, res, next) => {
@@ -192,6 +197,8 @@ const createBook = async (req, res, next) => {
 const updateBookId = async (req, res, next) => {
   const { id } = req.params;
   const { updateStatus } = req.query;
+
+  const { returnDate, lateFee, lateDays } = req.body;
   try {
     const targetBook = await Booking.findByPk(id);
 
@@ -199,16 +206,68 @@ const updateBookId = async (req, res, next) => {
       throw new ApiError(404, "Data pesanan tidak ditemukan");
     }
 
-    if (
+    if (updateStatus === "Completed") {
+      const returnRecordId = uuidv4();
+      await sequelize.transaction(async (t) => {
+        await ReturnRecord.create(
+          {
+            return_id: returnRecordId,
+            return_date: returnDate,
+            late_days: 0,
+            late_fee: 0,
+          },
+          { transaction: t }
+        );
+        await Booking.update(
+          {
+            status: "Completed",
+            return_id: returnRecordId,
+            updated_at: new Date(),
+          },
+          {
+            where: {
+              booking_id: id,
+            },
+          },
+          { transaction: t }
+        );
+      });
+    } else if (updateStatus === "Late") {
+      const returnRecordId = uuidv4();
+      await sequelize.transaction(async (t) => {
+        await ReturnRecord.create(
+          {
+            return_id: returnRecordId,
+            return_date: returnDate,
+            late_days: lateDays,
+            late_fee: lateFee,
+          },
+          { transaction: t }
+        );
+        await Booking.update(
+          {
+            status: "Completed",
+            return_id: returnRecordId,
+            updated_at: new Date(),
+          },
+          {
+            where: {
+              booking_id: id,
+            },
+          },
+          { transaction: t }
+        );
+      });
+    } else if (
       updateStatus === "Pending" ||
       updateStatus === "Paid" ||
       updateStatus === "Expired" ||
-      updateStatus === "Active" ||
-      updateStatus === "Completed"
+      updateStatus === "Active"
     ) {
-      const updatedBook = await Booking.update(
+      await Booking.update(
         {
           status: updateStatus,
+          updated_at: new Date(),
         },
         {
           where: {
@@ -216,6 +275,8 @@ const updateBookId = async (req, res, next) => {
           },
         }
       );
+    } else {
+      throw new ApiError(401, "Jenis status tidak diterima!");
     }
 
     res.status(201).json({
@@ -233,8 +294,6 @@ const getBooks = async (req, res, next) => {
   const { user_id, role } = req.user;
   try {
     const offset = (page - 1) * limit;
-
-    console.log(status);
 
     const where = {};
 
@@ -257,7 +316,7 @@ const getBooks = async (req, res, next) => {
       where.user_id = user_id;
     }
 
-    const books = await Booking.findAll({
+    const { count, rows } = await Booking.findAndCountAll({
       where,
       limit: parseInt(limit),
       offset: parseInt(offset),
@@ -280,10 +339,16 @@ const getBooks = async (req, res, next) => {
           model: Payment,
           as: "payment_data",
         },
+        {
+          model: Review,
+          as: "review_data",
+        },
       ],
     });
 
-    if (books.length < 1) {
+    const totalPages = Math.ceil(count / limit);
+
+    if (count < 1) {
       throw new ApiError(404, "Data pesanan tidak ada..");
     }
 
@@ -291,9 +356,158 @@ const getBooks = async (req, res, next) => {
       is_success: true,
       message: "Data pesanan berhasil di fetch.",
       data: {
-        total_data: books.length,
-        books,
+        total_data: count,
+        books: rows,
+        total_pages: totalPages,
       },
+      status_code: 200,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// For Admin (Dashboard)
+
+const getBookStatus = async (req, res, next) => {
+  try {
+    const bookStatus = await Booking.findAll({
+      attributes: [
+        "status",
+        [sequelize.fn("COUNT", sequelize.col("status")), "total"],
+      ],
+      group: ["status"],
+    });
+
+    res.status(200).json({
+      is_success: true,
+      data: bookStatus,
+      status_code: 200,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getRecentBooks = async (req, res, next) => {
+  const { limit = 5, page = 1, orderTarget, orderBy } = req.query;
+  const where = {};
+  const offset = (page - 1) * limit;
+  let order = [["created_at", "DESC"]];
+
+  if (orderTarget) {
+    if (orderTarget === "customer") {
+      order = [["user", "customer", "firstname", `${orderBy}`]];
+    }
+    if (orderTarget === "status") {
+      order = [["status", `${orderBy}`]];
+    }
+    if (orderTarget === "name") {
+      order = [
+        [
+          literal(
+            'COALESCE("vehicle_data->car_data"."name", "vehicle_data->motorcycle_data"."name")'
+          ),
+          `${orderBy}`,
+        ],
+      ];
+    }
+    if (orderTarget === "type") {
+      order = [["vehicle_data", "vehicle_type", `${orderBy}`]];
+    }
+    if (orderTarget === "total_price") {
+      order = [["total_price", `${orderBy}`]];
+    }
+    if (orderTarget === "booking_date") {
+      order = [["booking_date", `${orderBy}`]];
+    }
+    if (orderTarget === "return_date") {
+      order = [["return_data", "return_date", `${orderBy}`]];
+    }
+  }
+
+  try {
+    const recentBooks = await Booking.findAndCountAll({
+      where,
+      attributes: [
+        "status",
+        "booking_id",
+        "total_price",
+        "booking_date",
+        "rental_duration",
+        "return_date",
+        "created_at",
+      ],
+      offset,
+      limit,
+      include: [
+        {
+          model: Vehicle,
+          as: "vehicle_data",
+          attributes: ["vehicle_type", "vehicle_id"],
+          include: [
+            {
+              model: Car,
+              as: "car_data",
+              attributes: [
+                "name",
+                "image_url",
+                "car_id",
+                "license_plate",
+                "price_per_day",
+              ],
+            },
+            {
+              model: Motorcycle,
+              as: "motorcycle_data",
+              attributes: [
+                "name",
+                "image_url",
+                "motorcycle_id",
+                "license_plate",
+                "price_per_day",
+              ],
+            },
+          ],
+        },
+        {
+          model: Payment,
+          as: "payment_data",
+        },
+        {
+          model: User,
+          as: "user",
+          attributes: ["user_id", "image_url"],
+          include: [
+            {
+              model: Customer,
+              as: "customer",
+              attributes: ["firstname", "lastname"],
+            },
+            {
+              model: Auth,
+              as: "auths",
+              attributes: ["email"],
+            },
+          ],
+        },
+        {
+          model: ReturnRecord,
+          as: "return_data",
+          attributes: ["return_id", "return_date", "late_fee", "late_days"],
+        },
+      ],
+      order,
+    });
+
+    console.log(recentBooks);
+
+    const totalPage = Math.ceil(recentBooks.count / limit);
+
+    res.status(200).json({
+      is_success: true,
+      data: recentBooks,
+      totalPage,
       status_code: 200,
     });
   } catch (error) {
@@ -306,4 +520,6 @@ module.exports = {
   getBookById,
   updateBookId,
   getBooks,
+  getBookStatus,
+  getRecentBooks,
 };

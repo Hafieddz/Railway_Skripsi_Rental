@@ -21,6 +21,8 @@ const uploadImage = async (req, res, next) => {
     let customFileName;
     let folderUpload;
 
+    console.log("MASUK KE UPLOAD IMAGE");
+
     if (type === "User") {
       customFileName = `UserImage-${user_id}-${timestamp}${fileExtension}`;
       folderUpload = "/user";
@@ -44,7 +46,6 @@ const uploadImage = async (req, res, next) => {
     }
 
     next();
-
   } catch (error) {
     next(error);
   }

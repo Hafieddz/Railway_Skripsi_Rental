@@ -8,7 +8,6 @@ const generateAccessToken = async (
   firstname,
   lastname,
   role,
-  is_verified
 ) => {
   const token = jwt.sign(
     {
@@ -17,7 +16,6 @@ const generateAccessToken = async (
       firstname,
       lastname,
       role,
-      is_verified,
       type: "Access",
     },
     process.env.JWT_SECRET_KEY,

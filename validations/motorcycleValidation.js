@@ -37,6 +37,19 @@ const createMotorcycleSchema = Joi.object({
       "string.empty": "Tipe tranmisi wajib diisi",
       "any.only": "Tipe tranmisi harus 'Automatic' atau 'Manual'",
     }),
+  fuel_type: Joi.string()
+    .valid("Pertalite", "Pertamax", "Pertamax Turbo")
+    .required()
+    .messages({
+      "any.required": "Jenis bensin wajib diisi",
+      "string.empty": "Jenis bensin wajib diisi",
+      "any.only":
+        "Jenis bensin harus 'Pertalite', 'Pertamax', atau 'Pertamax Turbo'",
+    }),
+  condition_description: Joi.string().required().messages({
+    "any.required": "Kondisi kendaraan wajib diisi",
+    "string.empty": "Kondisi kendaraan wajib diisi",
+  }),
   price_per_day: Joi.number().positive().required().messages({
     "any.required": "Harga sewa per hari wajib diisi",
     "number.base": "Harga sewa wajib berupa angka",

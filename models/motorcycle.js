@@ -38,8 +38,20 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
       details: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         allowNull: false,
+      },
+      fuel_type: {
+        type: DataTypes.ENUM,
+        values: ["Pertamax", "Pertalite", "Pertamax Turbo"],
+        allowNull: false,
+        defaultValue: "Pertamax",
+      },
+      condition_description: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+        defaultValue:
+          "Jelaskan kondisi aktual kendaraan ini secara spesifik. Sebutkan kelebihan utamanya (misal: sangat irit, AC dingin sekali, ban baru) dan jika ada, catatan atau kekurangan minor yang perlu diketahui penyewa (misal: goresan halus di bumper belakang).",
       },
       manufacture_year: { type: DataTypes.INTEGER, allowNull: false },
       color: {

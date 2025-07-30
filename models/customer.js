@@ -69,9 +69,11 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
       },
-      is_verified: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
+      verification_status: {
+        type: DataTypes.ENUM,
+        values: ["Verified", "Not Verified"],
+        allowNull: false,
+        defaultValue: "Not Verified",
       },
     },
     {

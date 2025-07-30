@@ -25,6 +25,14 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "vehicle_id",
         as: "vehicle_data",
       });
+      Booking.belongsTo(models.User, {
+        foreignKey: "user_id",
+        as: "user",
+      });
+      Booking.hasOne(models.Review, {
+        foreignKey: "booking_id",
+        as: "review_data",
+      });
     }
   }
   Booking.init(

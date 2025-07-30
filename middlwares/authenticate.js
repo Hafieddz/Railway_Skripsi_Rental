@@ -37,38 +37,3 @@ module.exports = {
   authenticate,
   authorizeRoles,
 };
-
-// module.exports = async (req, res, next) => {
-//   try {
-//     const bearerToken = req.headers.authorization;
-
-//     if (!bearerToken) throw new ApiError(401, "Token tidak ada!");
-
-//     const token = bearerToken.split("Bearer ")[1];
-
-//     let payload;
-
-//     try {
-//       payload = jwt.verify(token, process.env.JWT_SECRET_KEY);
-//     } catch (jwtError) {
-//       if (jwtError instanceof jwt.TokenExpiredError) {
-//         throw new ApiError(400, "Token Expired");
-//       } else {
-//         throw new ApiError(401, "Token Invalid");
-//       }
-//     }
-
-//     const user = await User.findByPk(payload.user_id);
-
-//     if (!user) {
-//       throw new ApiError(404, "User tidak ditemukan");
-//     }
-
-//     req.user = user;
-//     req.payload = payload;
-
-//     next();
-//   } catch (error) {
-//     next(error);
-//   }
-// };

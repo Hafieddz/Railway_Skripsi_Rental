@@ -1,0 +1,56 @@
+"use strict";
+
+/** @type {import('sequelize-cli').Migration} */
+module.exports = {
+  async up(queryInterface, Sequelize) {
+    /**
+     * Add altering commands here.
+     *
+     * Example:
+     * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
+     */
+    await queryInterface.createTable("Reviews", {
+      review_id: {
+        type: Sequelize.UUID,
+        allowNull: false,
+        primaryKey: true,
+      },
+      user_id: {
+        type: Sequelize.UUID,
+        allowNull: false,
+      },
+      booking_id: {
+        type: Sequelize.UUID,
+        allowNull: false,
+      },
+      comment: {
+        type: Sequelize.TEXT,
+        allowNull: false,
+      },
+      rating: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+      },
+      created_at: {
+        allowNull: false,
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW(),
+      },
+      updated_at: {
+        allowNull: false,
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW(),
+      },
+    });
+  },
+
+  async down(queryInterface, Sequelize) {
+    /**
+     * Add reverting commands here.
+     *
+     * Example:
+     * await queryInterface.dropTable('users');
+     */
+    await queryInterface.dropTable("Reviews");
+  },
+};
