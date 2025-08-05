@@ -50,6 +50,11 @@ module.exports = (sequelize, DataTypes) => {
         },
         onDelete: "CASCADE",
       },
+      firstname: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      lastname: DataTypes.STRING,
       image_url: {
         type: DataTypes.STRING,
         defaultValue: "userDefault.jpg",
@@ -57,7 +62,6 @@ module.exports = (sequelize, DataTypes) => {
       gender: {
         type: DataTypes.ENUM,
         values: ["Male", "Female"],
-        allowNull: false,
       },
       role: {
         type: DataTypes.ENUM,

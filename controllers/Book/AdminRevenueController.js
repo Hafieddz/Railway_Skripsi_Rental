@@ -1,5 +1,5 @@
-const { Op, EmptyResultError } = require("sequelize");
-const { Payment, ReturnRecord, Booking, Sequelize } = require("../models");
+const { Op } = require("sequelize");
+const { Booking, Sequelize, ReturnRecord } = require("../../models");
 
 const getRevenue = async (req, res, next) => {
   try {
@@ -25,13 +25,15 @@ const getRevenue = async (req, res, next) => {
       };
     }
 
+    (dateFilter);
+
     const revenueData = await Booking.findAll({
       attributes: [
         [
           Sequelize.fn(
             "DATE_TRUNC",
             dateFormat,
-            Sequelize.col("Booking.created_at")
+            Sequelize.col("Booking.booking_date")
           ),
           "period",
         ],
@@ -51,7 +53,7 @@ const getRevenue = async (req, res, next) => {
       ],
       where: {
         status: {
-          [Op.in]: ["Paid", "Completed"],
+          [Op.in]: ["Paid", "Completed", "Active"],
         },
         ...dateFilter,
       },
@@ -64,6 +66,7 @@ const getRevenue = async (req, res, next) => {
       is_success: true,
       message: "Data pendapatan berhasil di fetch",
       data: {
+        total_data: revenueData.length,
         revenueData,
         groupBy: groupBy,
       },
@@ -77,15 +80,58 @@ const getRevenue = async (req, res, next) => {
 const getThisMonthRevenue = async (req, res, next) => {
   try {
     const date = new Date();
+    const firstDayThisMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+    const firstDayNextMonth = new Date(
+      date.getFullYear(),
+      date.getMonth() + 1,
+      1
+    );
 
-    const month = date.getMonth();
+    const dateFilter = {};
 
-    (month);
+    dateFilter.created_at = {
+      [Op.between]: [firstDayThisMonth, firstDayNextMonth],
+    };
+
+    const thisMonthRevenue = await Booking.findAll({
+      attributes: [
+        [
+          Sequelize.fn(
+            "DATE_TRUNC",
+            "month",
+            Sequelize.col("Booking.booking_date")
+          ),
+          "period",
+        ],
+        [
+          Sequelize.literal(
+            `SUM("Booking"."total_price" + COALESCE("return_data"."late_fee", 0))`
+          ),
+          "totalRevenue",
+        ],
+      ],
+      include: [
+        {
+          model: ReturnRecord,
+          as: "return_data",
+          attributes: [],
+        },
+      ],
+      where: {
+        status: {
+          [Op.in]: ["Paid", "Active", "Completed"],
+        },
+        ...dateFilter,
+      },
+      group: ["period"],
+      order: [[Sequelize.col("period"), "ASC"]],
+      raw: true,
+    });
 
     res.status(200).json({
       is_success: true,
       data: {
-        month,
+        revenue: thisMonthRevenue[0].totalRevenue,
       },
       status_code: 200,
     });

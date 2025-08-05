@@ -54,7 +54,7 @@ const createFAQ = async (req, res, next) => {
       description,
     });
 
-    console.log(createFAQ);
+    (createFAQ);
 
     res.status(201).json({
       is_success: true,
@@ -77,7 +77,7 @@ const createTnC = async (req, res, next) => {
       description,
     });
 
-    console.log(createTnC);
+    (createTnC);
 
     res.status(201).json({
       is_success: true,

@@ -9,9 +9,9 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      ReturnRecord.hasOne(models.Booking, {
+      ReturnRecord.belongsTo(models.Booking, {
         foreignKey: "return_id",
-        as: "return_data",
+        as: "booking_data",
       });
     }
   }
@@ -21,6 +21,14 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.UUID,
         allowNull: false,
         primaryKey: true,
+      },
+      booking_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: "Booking",
+          key: "booking_id",
+        },
       },
       return_date: {
         type: DataTypes.DATE,

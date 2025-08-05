@@ -21,7 +21,7 @@ const uploadImage = async (req, res, next) => {
     let customFileName;
     let folderUpload;
 
-    console.log("MASUK KE UPLOAD IMAGE");
+    ("MASUK KE UPLOAD IMAGE");
 
     if (type === "User") {
       customFileName = `UserImage-${user_id}-${timestamp}${fileExtension}`;
@@ -31,7 +31,7 @@ const uploadImage = async (req, res, next) => {
       folderUpload = "/vehicle";
     }
 
-    console.log({ customFileName });
+    ({ customFileName });
 
     const uploadResult = await imageKit.upload({
       file: req.file.buffer,

@@ -1,6 +1,4 @@
 const multer = require("multer");
-const ApiError = require("../lib/ApiError");
-
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {

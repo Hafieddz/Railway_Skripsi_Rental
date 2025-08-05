@@ -16,8 +16,6 @@ const checkPayment = async (req, res, next) => {
     process.env.MIDTRANS_SERVER_KEY + ":"
   ).toString("base64");
 
-  console.log(user_id);
-
   try {
     const response = await fetch(
       `https://api.sandbox.midtrans.com/v2/${order_id}/status`,
@@ -39,15 +37,17 @@ const checkPayment = async (req, res, next) => {
       throw new ApiError(400, "Terjadi error, pembayaran tidak dapat diproses");
     }
 
+    (order_id);
+
     await sequelize.transaction(async (t) => {
       const paymentData = await Payment.findOne({
         where: {
-          transaction_id: order_id,
+          booking_id: order_id,
         },
         include: [
           {
             model: Booking,
-            as: "payment_data",
+            as: "booking_data",
           },
         ],
         transaction: t,
@@ -70,7 +70,7 @@ const checkPayment = async (req, res, next) => {
         },
         {
           where: {
-            transaction_id: order_id,
+            booking_id: order_id,
           },
         },
         { transaction: t }
@@ -82,7 +82,7 @@ const checkPayment = async (req, res, next) => {
         },
         {
           where: {
-            payment_id: paymentData.payment_id,
+            booking_id: order_id,
           },
         },
         { transaction: t }
@@ -94,7 +94,7 @@ const checkPayment = async (req, res, next) => {
           user_id,
           payment_id: paymentData.payment_id,
           is_read: false,
-          notification_details: `Pesanan anda dengan booking_id : ${paymentData.payment_data.booking_id} telah terbayar. Silahkan tunggu admin menghubungi anda melalui whatsapp untuk informasi selanjutnya.`,
+          notification_details: `Pesanan anda dengan booking_id : ${order_id} telah terbayar. Silahkan tunggu admin menghubungi anda melalui whatsapp untuk informasi selanjutnya.`,
         },
         { transaction: t }
       );

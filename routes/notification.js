@@ -2,7 +2,11 @@ const {
   getNotifications,
   notifyUser,
 } = require("../controllers/NotificationController");
-const { authenticate, authorizeRoles } = require("../middlwares/authenticate");
+const {
+  authenticate,
+  authorizeRoles,
+  isAdminActive,
+} = require("../middlwares/authenticate");
 
 const router = require("express").Router();
 
@@ -12,6 +16,7 @@ router.post(
   "/notify-booking/:user_id",
   authenticate,
   authorizeRoles("Super Admin", "Admin"),
+  isAdminActive,
   notifyUser
 );
 

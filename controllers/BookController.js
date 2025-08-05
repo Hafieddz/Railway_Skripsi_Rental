@@ -46,8 +46,13 @@ const getBookById = async (req, res, next) => {
 
 const createBook = async (req, res, next) => {
   const { user_id } = req.user;
-  const { rental_start_date, rental_end_date, vehicle_id, total_price } =
-    req.body;
+  const {
+    rental_start_date,
+    rental_end_date,
+    vehicle_id,
+    total_price,
+    rental_duration,
+  } = req.body;
 
   try {
     const booking_id = uuidv4();
@@ -65,24 +70,6 @@ const createBook = async (req, res, next) => {
       throw new ApiError(404, "Kendaraan tidak ditemukan.");
     }
 
-    if (vehicle.vehicle_type === "Car") {
-      vehicle_data = await Car.findOne({
-        where: {
-          vehicle_id: vehicle.vehicle_id,
-        },
-      });
-    } else if (vehicle.vehicle_type === "Motorcycle") {
-      vehicle_data = await Motorcycle.findOne({
-        where: {
-          vehicle_id: vehicle.vehicle_id,
-        },
-      });
-    }
-
-    if (!vehicle_data || !vehicle_data.is_available) {
-      throw new ApiError(400, "Kendaraan tidak dapat di booking.");
-    }
-
     let parameter = {
       transaction_details: {
         order_id: booking_id,
@@ -93,7 +80,7 @@ const createBook = async (req, res, next) => {
           id: vehicle_id,
           price: total_price,
           quantity: 1,
-          name: vehicle_data.name,
+          name: vehicle.name,
         },
       ],
       customer_details: {
@@ -122,58 +109,41 @@ const createBook = async (req, res, next) => {
       console.error(midtransError);
       throw new ApiError(500, "Gagal memproses transaksi pembayaran");
     }
-    const createBooking = await sequelize.transaction(async (t) => {
-      const updateVehicle = await vehicle_data.update(
-        { is_available: false, updated_at: new Date() },
-        { transaction: t }
-      );
-
-      await Payment.create(
-        {
-          payment_id,
-          user_id,
-          booking_id,
-          payment_method: "Transfer",
-          payment_status: "Pending",
-          payment_token: midtrans_token,
-          payment_date: new Date(),
-          total_price,
-          transaction_id: booking_id,
-        },
-        { transaction: t }
-      );
-
-      const booking = await Booking.create(
+    await sequelize.transaction(async (t) => {
+      await Booking.create(
         {
           booking_id,
           user_id,
-          payment_id,
           vehicle_id,
           booking_date: rental_start_date,
           return_date: rental_end_date,
           status: "Pending",
           total_price,
           payment_expires_at,
+          rental_duration,
+        },
+        { transaction: t }
+      );
+      
+      await Payment.create(
+        {
+          payment_id,
+          user_id,
+          booking_id,
+          payment_status: "Pending",
+          payment_token: midtrans_token,
+          payment_date: new Date(),
+          total_price,
         },
         { transaction: t }
       );
 
-      const vehicleAvailability = await VehicleAvailability.create({
-        vehicle_availability_id,
-        vehicle_id,
-        unavailable_start_time: rental_start_date,
-        unavailable_end_time: rental_end_date,
-        status: "Booked",
-        created_at: now,
-        updated_at: now,
-      });
-
-      const notification = await Notification.create(
+      await Notification.create(
         {
           notification_id: uuidv4(),
           booking_id,
           user_id,
-          notification_details: `Anda telah memesan kendaraan ${vehicle_data.name} dengan total ${total_price}. Silahkan proses pembayaran sebelum 30 Menit agar pesanan anda tidak kami batalakan.`,
+          notification_details: `Anda telah memesan kendaraan ${vehicle.name} dengan total ${total_price}. Silahkan proses pembayaran sebelum 30 Menit agar pesanan anda tidak kami batalakan.`,
         },
         { transaction: t }
       );
@@ -500,7 +470,7 @@ const getRecentBooks = async (req, res, next) => {
       order,
     });
 
-    console.log(recentBooks);
+    (recentBooks);
 
     const totalPage = Math.ceil(recentBooks.count / limit);
 

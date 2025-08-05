@@ -49,7 +49,7 @@ const updateBookingAndCars = async (req, res, next) => {
       );
     });
 
-    console.log(`Jumlah pesanan yang expired : ${updatedBooking}`);
+    (`Jumlah pesanan yang expired : ${updatedBooking}`);
 
     res.status(200).json({
       is_success: true,

@@ -1,45 +1,63 @@
-const uploadImage = require("../controllers/ImageController");
+const router = require("express").Router();
 const {
-  getUserById,
-  updateUserImage,
+  getCustomers,
+  updateUserVerificationStatus,
+} = require("../controllers/Customer/AdminCustomerController");
+const {
   updateUserData,
   addPhoneNumber,
   addAddress,
-  changePassword,
   checkPassword,
-  updateUserVerificationStatus,
-  getCustomers,
-} = require("../controllers/UserController");
-const { authenticate, authorizeRoles } = require("../middlwares/authenticate");
-const upload = require("../middlwares/upload");
-
-const router = require("express").Router();
+  changePassword,
+} = require("../controllers/User/UserController");
+const { getCustomerBooks } = require("../controllers/UserController");
+const {
+  authenticate,
+  authorizeRoles,
+  isAdminActive,
+} = require("../middlwares/authenticate");
 
 router.get(
-  "/customers",
+  "/admin/customers",
   authenticate,
   authorizeRoles("Super Admin", "Admin"),
   getCustomers
 );
+
+router.put(
+  "/admin/update-verification-status/:user_id",
+  authenticate,
+  authorizeRoles("Super Admin", "Admin"),
+  isAdminActive,
+  updateUserVerificationStatus
+);
+
 router.post("/update-user", authenticate, updateUserData);
 router.post("/add-phone", authenticate, addPhoneNumber);
 router.post("/add-address", authenticate, addAddress);
 router.post("/check-password", authenticate, checkPassword);
 router.put("/change-password", authenticate, changePassword);
 
-router.get("/:id", authenticate, getUserById);
-router.post(
-  "/:id",
-  authenticate,
-  upload.single("user_image"),
-  uploadImage,
-  updateUserImage
-);
+// router.get(
+//   "/customers",
+//   authenticate,
+//   authorizeRoles("Super Admin", "Admin"),
+//   getCustomers
+// );
 
-router.put(
-  "/update-verification-status/:user_id",
-  authenticate,
-  updateUserVerificationStatus
-);
+// router.get("/:id", authenticate, getUserById);
+// router.post(
+//   "/:id",
+//   authenticate,
+//   upload.single("user_image"),
+//   uploadImage,
+//   updateUserImage
+// );
+
+// router.put(
+//   "/update-verification-status/:user_id",
+//   authenticate,
+//   updateUserVerificationStatus
+// );
 
 module.exports = router;

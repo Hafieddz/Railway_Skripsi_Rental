@@ -28,6 +28,6 @@ app.use((req, res, next) => {
 app.use(handleError);
 
 app.listen(PORT, () => {
-  console.log(`Server running on PORT : ${PORT}`);
+  (`Server running on PORT : ${PORT}`);
   // initializeCronJobs();
 });

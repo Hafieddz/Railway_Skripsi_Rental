@@ -5,11 +5,11 @@ const booking = require("../models/booking");
 
 const updateExpiredBookings = async () => {
   const now = new Date();
-  console.log(now);
+  (now);
 
   let updatedBookingCount = 0;
 
-  console.log(`\x1b[33mCheck Expired Bookings...\x1b[0m`);
+  (`\x1b[33mCheck Expired Bookings...\x1b[0m`);
 
   try {
     await sequelize.transaction(async (t) => {
@@ -66,14 +66,14 @@ const updateExpiredBookings = async () => {
       );
     });
 
-    console.log(`\x1b[33mCheck Expired Bookings Completed.\x1b[0m`);
+    (`\x1b[33mCheck Expired Bookings Completed.\x1b[0m`);
 
     return updatedBookingCount;
   } catch (error) {
-    console.log(
+    (
       `\x1b[31mError When Updating / Checking Expired Booking.\x1b[0m`
     );
-    console.log(`\x1b[31mError : ${error}\x1b[0m`);
+    (`\x1b[31mError : ${error}\x1b[0m`);
   }
 };
 
@@ -82,7 +82,7 @@ const notifyUserBeforeExpired = async () => {
   const fiveMinutes = new Date(now.getTime() + 5 * 60 * 1000);
   let userNotified = 0;
 
-  console.log(`\x1b[33mCheck Booking That Almost Expire...\x1b[0m`);
+  (`\x1b[33mCheck Booking That Almost Expire...\x1b[0m`);
 
   try {
     await sequelize.transaction(async (t) => {
@@ -128,12 +128,12 @@ const notifyUserBeforeExpired = async () => {
       );
     });
 
-    console.log(`\x1b[33mCheck Bookings That Almost Expire Completed.\x1b[0m`);
+    (`\x1b[33mCheck Bookings That Almost Expire Completed.\x1b[0m`);
 
     return userNotified;
   } catch (error) {
-    console.log(`\x1b[31mError When Notify / Checking User .\x1b[0m`);
-    console.log(`\x1b[31mError : ${error}\x1b[0m`);
+    (`\x1b[31mError When Notify / Checking User .\x1b[0m`);
+    (`\x1b[31mError : ${error}\x1b[0m`);
   }
 };
 

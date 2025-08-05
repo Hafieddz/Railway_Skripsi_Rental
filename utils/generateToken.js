@@ -53,7 +53,7 @@ const generateAdminToken = async (
 };
 
 const generateForgotPasswordToken = async (email) => {
-  console.log(process.env.JWT_FORGOT_PASSWORD_TOKEN_EXPIRED);
+  (process.env.JWT_FORGOT_PASSWORD_TOKEN_EXPIRED);
 
   const token = jwt.sign(
     {

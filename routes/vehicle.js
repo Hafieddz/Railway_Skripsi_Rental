@@ -1,19 +1,30 @@
 const uploadImage = require("../controllers/ImageController");
 const {
+  getCarById,
+  getMotorcycleById,
+  favouriteVehicle,
+} = require("../controllers/Vehicle/VehicleController");
+const {
+  getRentalCarList,
+  getRentalMotorcycleList,
+} = require("../controllers/Vehicle/VehicleCustomerController");
+const {
   getCarList,
   getMotorcycleList,
   createMotorcycle,
   updateCar,
-  getCarById,
   createCar,
   countAllVehicles,
   getVehicles,
   getVehicleById,
   updateVehicleFeature,
   updateVehicleDetails,
-  favouriteVehicle,
 } = require("../controllers/VehicleController");
-const { authenticate, authorizeRoles } = require("../middlwares/authenticate");
+const {
+  authenticate,
+  authorizeRoles,
+  isAdminActive,
+} = require("../middlwares/authenticate");
 const checkAdmin = require("../middlwares/checkAdmin");
 const upload = require("../middlwares/upload");
 const validateBody = require("../middlwares/validateBody");
@@ -28,20 +39,32 @@ const {
 const router = require("express").Router();
 
 //Route Vehicles
+router.get("/customer/cars", getRentalCarList);
+router.get("/customer/motorcycles", getRentalMotorcycleList);
+
+// Vehicle Details
+router.get("/car/:vehicle_id", getCarById);
+router.get("/motorcycle/:vehicle_id", getMotorcycleById);
+
+// update feature
 router.put(
   "/update-feature/:vehicle_id",
   authenticate,
   authorizeRoles("Super Admin", "Admin"),
+  isAdminActive,
   updateVehicleFeature
 );
 
+// update details kendaraan (manufacture year, passenger, fuel, details, condition, etc)
 router.put(
   "/update-details/:vehicle_id",
   authenticate,
   authorizeRoles("Super Admin", "Admin"),
+  isAdminActive,
   updateVehicleDetails
 );
 
+// fetch untuk list kendaraan admin
 router.get(
   "/vehicles",
   authenticate,
@@ -49,6 +72,7 @@ router.get(
   getVehicles
 );
 
+// dashboard jumlah kendaraan
 router.get(
   "/countVehicles",
   authenticate,
@@ -56,11 +80,15 @@ router.get(
   countAllVehicles
 );
 
-router.get("/favourite-vehicle", authenticate, favouriteVehicle);
+// landing page
+router.get("/favourite-vehicle", favouriteVehicle);
+
+// buat data motor
 router.post(
   "/motorcycles",
   authenticate,
-  checkAdmin,
+  authorizeRoles("Super Admin", "Admin"),
+  isAdminActive,
   upload.single("image_url"),
   validateBody(createMotorcycleSchema),
   uploadImage,
@@ -69,18 +97,19 @@ router.post(
 
 router.get("/cars", getCarList);
 
+// buat data mobil
 router.post(
   "/car",
   authenticate,
-  checkAdmin,
+  authorizeRoles("Super Admin", "Admin"),
+  isAdminActive,
   upload.single("image_url"),
   validateBody(createCarSchema),
   uploadImage,
   createCar
 );
-router.get("/motorcycles", getMotorcycleList);
 
-//Route Cars
+router.get("/motorcycles", getMotorcycleList);
 
 router.get("/:vehicle_id", authenticate, getVehicleById);
 router.get("/car/:id", getCarById);

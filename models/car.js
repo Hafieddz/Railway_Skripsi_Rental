@@ -25,43 +25,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.UUID,
         unique: true,
       },
-      license_plate: {
-        type: DataTypes.STRING,
-        unique: true,
-        allowNull: false,
-      },
-      name: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      brand: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      details: {
-        type: DataTypes.TEXT,
-        allowNull: false,
-      },
-      manufacture_year: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      color: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
       transmission_type: {
         type: DataTypes.ENUM,
         allowNull: false,
         values: ["Automatic", "Manual"],
-      },
-      price_per_day: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      is_available: {
-        type: DataTypes.BOOLEAN,
-        allowNull: false,
       },
       type: {
         type: DataTypes.ENUM,
@@ -85,22 +52,12 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: 2,
       },
-      condition_description: {
-        type: DataTypes.TEXT,
-        allowNull: false,
-        defaultValue:
-          "Jelaskan kondisi aktual kendaraan ini secara spesifik. Sebutkan kelebihan utamanya (misal: sangat irit, AC dingin sekali, ban baru) dan jika ada, catatan atau kekurangan minor yang perlu diketahui penyewa (misal: goresan halus di bumper belakang).",
-      },
       features: {
         type: DataTypes.ARRAY(DataTypes.STRING),
         allowNull: true,
       },
       passenger_capacity: {
         type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      image_url: {
-        type: DataTypes.STRING,
         allowNull: false,
       },
       created_at: {

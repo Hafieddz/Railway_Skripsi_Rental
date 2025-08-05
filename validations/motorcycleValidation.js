@@ -55,10 +55,6 @@ const createMotorcycleSchema = Joi.object({
     "number.base": "Harga sewa wajib berupa angka",
     "number.positive": "Harga sewa wajib bernilai positif",
   }),
-  is_available: Joi.boolean().required().messages({
-    "any.required": "Status ketersediaan wajib diisi",
-    "boolean.base": "Format 'is_available' salah",
-  }),
   image_url: Joi.optional(),
 });
 

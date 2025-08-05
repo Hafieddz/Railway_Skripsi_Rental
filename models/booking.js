@@ -9,11 +9,11 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      Booking.belongsTo(models.Payment, {
-        foreignKey: "payment_id",
+      Booking.hasOne(models.Payment, {
+        foreignKey: "booking_id",
         as: "payment_data",
       });
-      Booking.belongsTo(models.ReturnRecord, {
+      Booking.hasOne(models.ReturnRecord, {
         foreignKey: "return_id",
         as: "return_data",
       });
@@ -50,12 +50,6 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.UUID,
         allowNull: false,
       },
-      return_id: {
-        type: DataTypes.UUID,
-      },
-      payment_id: {
-        type: DataTypes.UUID,
-      },
       booking_date: {
         type: DataTypes.DATE,
         allowNull: false,
@@ -77,9 +71,13 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DATE,
         allowNull: false,
       },
-      is_payment_almost_expired_notified: {
+      expires_notified: {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
+      },
+      rental_duration: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
       },
       created_at: {
         type: DataTypes.DATE,

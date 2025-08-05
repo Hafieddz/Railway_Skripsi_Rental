@@ -22,7 +22,7 @@ module.exports = (sequelize, DataTypes) => {
         as: "payment_notification",
       });
     }
-  } 
+  }
   Notification.init(
     {
       notification_id: {
@@ -38,10 +38,6 @@ module.exports = (sequelize, DataTypes) => {
       },
       user_id: {
         type: DataTypes.UUID,
-      },
-      is_read: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
       },
       notification_details: {
         type: DataTypes.TEXT,

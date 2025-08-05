@@ -8,9 +8,9 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      Payment.hasOne(models.Booking, {
+      Payment.belongsTo(models.Booking, {
         foreignKey: "payment_id",
-        as: "payment_data",
+        as: "booking_data",
       });
       Payment.hasMany(models.Notification, {
         foreignKey: "payment_id",
@@ -29,10 +29,13 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.UUID,
         allowNull: false,
       },
-      payment_method: {
-        type: DataTypes.ENUM,
-        values: ["Cash", "Transfer"],
+      booking_id: {
+        type: DataTypes.UUID,
         allowNull: false,
+        references: {
+          model: "Booking",
+          key: "booking_id",
+        },
       },
       payment_status: {
         type: DataTypes.ENUM,
@@ -49,10 +52,6 @@ module.exports = (sequelize, DataTypes) => {
       },
       total_price: {
         type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      transaction_id: {
-        type: DataTypes.UUID,
         allowNull: false,
       },
       created_at: {

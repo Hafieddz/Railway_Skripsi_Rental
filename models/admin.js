@@ -25,11 +25,6 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.UUID,
         unique: true,
       },
-      firstname: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      lastname: DataTypes.STRING,
       status: {
         type: DataTypes.ENUM,
         allowNull: false,

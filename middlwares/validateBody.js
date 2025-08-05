@@ -9,6 +9,8 @@ module.exports = (schema) => {
         status_code: 400,
       });
     }
+    ("Next Validate Body");
+
     next();
   };
 };

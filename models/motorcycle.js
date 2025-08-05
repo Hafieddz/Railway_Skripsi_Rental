@@ -25,49 +25,16 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.UUID,
         unique: true,
       },
-      license_plate: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      name: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      brand: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      details: {
-        type: DataTypes.TEXT,
-        allowNull: false,
-      },
       fuel_type: {
         type: DataTypes.ENUM,
         values: ["Pertamax", "Pertalite", "Pertamax Turbo"],
         allowNull: false,
         defaultValue: "Pertamax",
       },
-      condition_description: {
-        type: DataTypes.TEXT,
-        allowNull: false,
-        defaultValue:
-          "Jelaskan kondisi aktual kendaraan ini secara spesifik. Sebutkan kelebihan utamanya (misal: sangat irit, AC dingin sekali, ban baru) dan jika ada, catatan atau kekurangan minor yang perlu diketahui penyewa (misal: goresan halus di bumper belakang).",
-      },
-      manufacture_year: { type: DataTypes.INTEGER, allowNull: false },
-      color: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
       transmission_type: {
         type: DataTypes.ENUM,
         allowNull: false,
         values: ["Automatic", "Manual"],
-      },
-      price_per_day: { type: DataTypes.INTEGER, allowNull: false },
-      is_available: { type: DataTypes.BOOLEAN, allowNull: false },
-      image_url: {
-        type: DataTypes.STRING,
-        allowNull: false,
       },
       created_at: {
         type: DataTypes.DATE,

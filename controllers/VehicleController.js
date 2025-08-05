@@ -57,7 +57,7 @@ const getCarById = async (req, res, next) => {
       ],
     });
 
-    console.log(getReview);
+    (getReview);
 
     res.status(200).json({
       is_success: true,
@@ -87,14 +87,14 @@ const getCarList = async (req, res, next) => {
       is_available,
     } = req.query;
 
-    console.log(req.query);
+    (req.query);
 
     const offset = (page - 1) * limit;
 
     const where = {};
     let cars;
 
-    console.log(where);
+    (where);
 
     const allowedTransmissions = ["Automatic", "Manual"];
     const allowedType = ["Sedan", "MPV", "SUV"];
@@ -322,14 +322,24 @@ const createCar = async (req, res, next) => {
     } = req.body;
 
     const image_url = res.locals.vehicleImgFilename;
-    console.log(req.body);
-    console.log(image_url);
+    (req.body);
+    (image_url);
 
     await sequelize.transaction(async (t) => {
       const vehicle = await Vehicle.create(
         {
           vehicle_id: uuidv4(),
           vehicle_type: "Car",
+          license_plate,
+          name,
+          brand,
+          details,
+          color,
+          manufacture_year: parseInt(manufacture_year),
+          image_url,
+          price_per_day: parseInt(price_per_day),
+          condition_description,
+          features: ["Sensor Parkir"],
           created_at: new Date(),
           updated_at: new Date(),
         },
@@ -339,21 +349,11 @@ const createCar = async (req, res, next) => {
         {
           car_id: uuidv4(),
           vehicle_id: vehicle.vehicle_id,
-          license_plate,
-          name,
-          brand,
-          details,
-          color,
           transmission_type,
           fuel_type,
-          condition_description,
-          manufacture_year: parseInt(manufacture_year),
           baggage_capacity: parseInt(baggage_capacity),
-          price_per_day: parseInt(price_per_day),
           passenger_capacity: parseInt(passenger_capacity),
-          is_available: true,
           type,
-          image_url,
           created_at: new Date(),
           updated_at: new Date(),
         },
@@ -372,6 +372,8 @@ const createCar = async (req, res, next) => {
 };
 
 const createMotorcycle = async (req, res, next) => {
+  ("masuk controller");
+
   try {
     const {
       license_plate,
@@ -382,7 +384,8 @@ const createMotorcycle = async (req, res, next) => {
       color,
       transmission_type,
       price_per_day,
-      is_available,
+      condition_description,
+      fuel_type,
     } = req.body;
 
     const image_url = res.locals.vehicleImgFilename;
@@ -392,6 +395,15 @@ const createMotorcycle = async (req, res, next) => {
         {
           vehicle_id: uuidv4(),
           vehicle_type: "Motorcycle",
+          license_plate,
+          name,
+          brand,
+          details,
+          manufacture_year,
+          color,
+          price_per_day,
+          condition_description,
+          image_url,
           created_at: new Date(),
           updated_at: new Date(),
         },
@@ -401,16 +413,8 @@ const createMotorcycle = async (req, res, next) => {
         {
           motorcycle_id: uuidv4(),
           vehicle_id: vehicle.vehicle_id,
-          license_plate,
-          name,
-          brand,
-          details,
-          manufacture_year,
-          color,
+          fuel_type,
           transmission_type,
-          price_per_day,
-          is_available,
-          image_url,
         },
         { transaction: t }
       );
@@ -491,20 +495,12 @@ const getVehicles = async (req, res, next) => {
     const where = {};
 
     if (name) {
-      where[Op.or] = [
-        { "$car_data.name$": { [Op.iLike]: `%${name}%` } },
-        { "$motorcycle_data.name$": { [Op.iLike]: `%${name}%` } },
-      ];
+      where[Op.or] = [{ $name$: { [Op.iLike]: `%${name}%` } }];
     }
 
     if (license_plate) {
       where[Op.or] = [
-        { "$car_data.license_plate$": { [Op.iLike]: `%${license_plate}%` } },
-        {
-          "$motorcycle_data.license_plate$": {
-            [Op.iLike]: `%${license_plate}%`,
-          },
-        },
+        { $license_plate$: { [Op.iLike]: `%${license_plate}%` } },
       ];
     }
 
@@ -569,20 +565,12 @@ const getVehicleById = async (req, res, next) => {
   }
 };
 
-const getFavouriteVehicles = async (req, res, next) => {
-  const limit = 4;
-  try {
-  } catch (error) {
-    next(error);
-  }
-};
-
 const updateVehicleFeature = async (req, res, next) => {
   const { vehicle_id } = req.params;
   const { updatedFeature } = req.body;
 
   try {
-    const updateFeature = await Car.update(
+    await Car.update(
       {
         features: updatedFeature,
       },
@@ -616,112 +604,63 @@ const updateVehicleDetails = async (req, res, next) => {
     condition_description,
   } = req.body;
   try {
-    const values = {};
+    const vehicleValues = {};
+    const childValues = {};
     if (passenger_capacity) {
-      values.passenger_capacity = passenger_capacity;
+      childValues.passenger_capacity = passenger_capacity;
     }
     if (transmission_type) {
-      values.transmission_type = transmission_type;
+      childValues.transmission_type = transmission_type;
     }
     if (baggage_capacity) {
-      values.baggage_capacity = baggage_capacity;
+      childValues.baggage_capacity = baggage_capacity;
     }
     if (fuel_type) {
-      values.fuel_type = fuel_type;
+      childValues.fuel_type = fuel_type;
     }
     if (manufacture_year) {
-      values.manufacture_year = manufacture_year;
+      vehicleValues.manufacture_year = manufacture_year;
     }
     if (price_per_day) {
-      values.price_per_day = price_per_day;
+      vehicleValues.price_per_day = price_per_day;
     }
     if (details) {
-      values.details = details;
+      vehicleValues.details = details;
     }
     if (condition_description) {
-      values.condition_description = condition_description;
+      vehicleValues.condition_description = condition_description;
     }
 
     const vehicleType = await Vehicle.findByPk(vehicle_id);
 
-    if (vehicleType.vehicle_type === "Car") {
-      const updateDetails = await Car.update(values, {
-        where: {
-          vehicle_id,
-        },
-      });
-
-      if (updateDetails === 0) {
-        throw new ApiError(401, "Data tidak berhasil di-update");
-      }
-    } else {
-      const updateDetails = await Motorcycle.update(values, {
-        where: {
-          vehicle_id,
-        },
-      });
-      console.log(updateDetails);
-      if (updateDetails === 0) {
-        throw new ApiError(401, "Data tidak berhasil di-update");
+    // Update Child (Car || Motorcycle)
+    if (Object.keys(childValues).length > 0) {
+      if (vehicleType.vehicle_type === "Car") {
+        await Car.update(childValues, {
+          where: {
+            vehicle_id,
+          },
+        });
+      } else {
+        await Motorcycle.update(childValues, {
+          where: {
+            vehicle_id,
+          },
+        });
       }
     }
+
+    // Update Vehicle
+    await Vehicle.update(vehicleValues, {
+      where: {
+        vehicle_id,
+      },
+    });
 
     res.status(201).json({
       is_success: true,
       message: "Data berhasil di-update",
       status_code: 201,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-const favouriteVehicle = async (req, res, next) => {
-  try {
-    const favourite = await Booking.findAll({
-      attributes: [
-        "vehicle_id",
-        [
-          sequelize.fn("COUNT", sequelize.col("Booking.vehicle_id")),
-          "booking_count",
-        ],
-      ],
-      include: [
-        {
-          model: Vehicle,
-          as: "vehicle_data",
-          attributes: ["vehicle_id"],
-        },
-      ],
-      group: ["Booking.vehicle_id", "vehicle_data.vehicle_id"],
-      order: [[sequelize.literal("booking_count"), "DESC"]],
-      limit: 4,
-    });
-
-    const favouriteIds = await favourite.map((item) => item.vehicle_id);
-
-    const vehicleData = await Vehicle.findAll({
-      where: {
-        vehicle_id: {
-          [Op.in]: favouriteIds,
-        },
-      },
-      include: [
-        {
-          model: Car,
-          as: "car_data",
-        },
-        {
-          model: Motorcycle,
-          as: "motorcycle_data",
-        },
-      ],
-    });
-
-    res.status(200).json({
-      is_success: true,
-      data: vehicleData,
-      status_code: 200,
     });
   } catch (error) {
     next(error);
@@ -741,5 +680,4 @@ module.exports = {
   getVehicleById,
   updateVehicleFeature,
   updateVehicleDetails,
-  favouriteVehicle,
 };

@@ -34,18 +34,6 @@ module.exports = (sequelize, DataTypes) => {
       expires_at: {
         type: DataTypes.DATE,
       },
-      firstname: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      lastname: {
-        type: DataTypes.STRING,
-      },
-      gender: {
-        type: DataTypes.ENUM,
-        values: ["Male", "Female"],
-        allowNull: false,
-      },
       status: {
         type: DataTypes.ENUM,
         values: ["Used", "Pending", "Expired"],

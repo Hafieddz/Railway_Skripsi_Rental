@@ -1,11 +1,6 @@
 const Joi = require("joi");
 
 const registerUserSchema = Joi.object({
-  firstname: Joi.string().required().messages({
-    "any.required": "Nama depan wajib diisi",
-    "string.empty": "Nama depan wajib diisi",
-  }),
-  lastname: Joi.optional(),
   email: Joi.string().email().required().messages({
     "string.empty": "Email tidak boleh kosong",
     "any.required": "Email tidak boleh kosong",
@@ -18,11 +13,6 @@ const registerUserSchema = Joi.object({
   confirm_password: Joi.string().required().messages({
     "string.empty": "Konfimasi password tidak boleh kosong",
     "any.required": "Konfirmasi password tidak boleh kosong",
-  }),
-  gender: Joi.string().valid("Male", "Female").required().messages({
-    "string.empty": "Gender tidak boleh kosong",
-    "any.required": "Gender tidak boleh kosong",
-    "any.only": "Gender harus 'Male' atau 'Female'",
   }),
 });
 
@@ -48,7 +38,6 @@ const forgotPasswordSchema = Joi.object({
     "string.email": "Format email salah",
   }),
 });
-
 
 module.exports = {
   registerUserSchema,

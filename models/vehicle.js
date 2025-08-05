@@ -39,6 +39,42 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         values: ["Car", "Motorcycle"],
       },
+      name: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      brand: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      color: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      image_url: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      license_plate: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      manufacture_year: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+      condition_description: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+      details: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+      price_per_day: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
       created_at: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,

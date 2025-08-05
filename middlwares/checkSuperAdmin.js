@@ -2,7 +2,7 @@ const ApiError = require("../lib/ApiError");
 
 module.exports = async (req, res, next) => {
   try {
-    console.log(req.payload);
+    (req.payload);
 
     if (req.user.role !== "Admin" && req.user.role !== "Customer") {
       next();
